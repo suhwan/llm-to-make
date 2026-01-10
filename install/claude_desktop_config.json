@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "make": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://eu2.make.com/mcp/u/24d0c939-f69a-4c68-8ea9-8314e72d4dd0/sse"]
+    },
+    "airtable": {
+      "command": "npx",
+      "args": ["-y", "airtable-mcp-server"],
+      "env": {
+        "AIRTABLE_API_KEY": "YOUR_AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID": "YOUR_AIRTABLE_BASE_ID"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN"
+      }
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": ["-y", "@isaacphi/mcp-gdrive"]
+    }
+  }
+}
