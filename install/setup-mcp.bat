@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 echo.
@@ -29,7 +28,7 @@ if errorlevel 1 (
     echo ========================================
     echo.
     echo 1. Open https://nodejs.org/ in your browser
-    echo 2. Click the "LTS" download button
+    echo 2. Click the LTS download button
     echo 3. Run the downloaded installer
     echo 4. Follow the installation wizard
     echo 5. Restart your computer and run this script again
@@ -50,8 +49,8 @@ REM Step 2: Check .env file
 REM ========================================
 echo [2/4] Checking .env file...
 
-set ENV_FILE=%~dp0.env
-set ENV_TEMPLATE=%~dp0.env.template
+set "ENV_FILE=%~dp0.env"
+set "ENV_TEMPLATE=%~dp0.env.template"
 
 if not exist "%ENV_FILE%" (
     if exist "%ENV_TEMPLATE%" (
@@ -80,10 +79,10 @@ if not exist "%ENV_FILE%" (
 )
 
 REM Read values from .env file
-set AIRTABLE_API_KEY=
-set AIRTABLE_BASE_ID=
-set GITHUB_TOKEN=
-set MAKE_MCP_URL=
+set "AIRTABLE_API_KEY="
+set "AIRTABLE_BASE_ID="
+set "GITHUB_TOKEN="
+set "MAKE_MCP_URL="
 
 for /f "usebackq tokens=1,* delims==" %%a in ("%ENV_FILE%") do (
     set "line=%%a"
@@ -141,7 +140,7 @@ echo        [OK]
 if not "%GITHUB_TOKEN%"=="" (
     echo.
     echo      [Optional MCP]
-    echo      - @modelcontextprotocol/server-github (GitHub)...
+    echo      - server-github (GitHub)...
     call npx -y @modelcontextprotocol/server-github --help >nul 2>nul
     echo        [OK]
 )
@@ -151,16 +150,10 @@ echo [OK] MCP packages installed
 echo.
 
 REM ========================================
-REM Step 4: Merge config file (preserve existing)
+REM Step 4: Merge config file
 REM ========================================
 echo [4/4] Merging Claude Desktop config...
 echo.
-
-REM Set environment variables and run Node.js script
-set "AIRTABLE_API_KEY=%AIRTABLE_API_KEY%"
-set "AIRTABLE_BASE_ID=%AIRTABLE_BASE_ID%"
-set "GITHUB_TOKEN=%GITHUB_TOKEN%"
-set "MAKE_MCP_URL=%MAKE_MCP_URL%"
 
 node "%~dp0merge-config.js"
 
@@ -180,8 +173,8 @@ echo 1. Restart Claude Desktop
 echo    - Quit completely from system tray, then restart
 echo.
 echo 2. Verify MCP connection
-echo    - In Claude Desktop, type: "Show me available MCP tools"
-    echo    - If Make, Airtable tools appear, success!
+echo    - In Claude Desktop, type: Show me available MCP tools
+echo    - If Make, Airtable tools appear, success!
 echo.
 echo ========================================
 echo.
