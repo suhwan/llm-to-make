@@ -11,11 +11,14 @@ echo.
 echo 이 스크립트는 Claude Desktop에서 MCP 서버를 사용할 수 있도록
 echo 필요한 패키지를 자동으로 설치합니다.
 echo.
+echo [중요] 기존 MCP 설정이 있으면 유지하고,
+echo        Make/Airtable MCP만 추가합니다.
+echo.
 
 REM ========================================
 REM Step 1: Node.js 설치 확인
 REM ========================================
-echo [1/5] Node.js 확인 중...
+echo [1/4] Node.js 확인 중...
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -46,7 +49,7 @@ echo.
 REM ========================================
 REM Step 2: .env 파일 확인
 REM ========================================
-echo [2/5] .env 파일 확인 중...
+echo [2/4] .env 파일 확인 중...
 
 set ENV_FILE=%~dp0.env
 set ENV_TEMPLATE=%~dp0.env.template
@@ -123,42 +126,24 @@ exit /b 1
 REM ========================================
 REM Step 3: NPM 패키지 설치
 REM ========================================
-echo [3/5] MCP 패키지 설치 중...
+echo [3/4] MCP 패키지 설치 중...
 echo      (처음 실행 시 몇 분 소요될 수 있습니다)
 echo.
 
 echo      [필수 MCP]
 echo      - mcp-remote (Make.com 연동)...
 call npx -y mcp-remote --help >nul 2>nul
-if errorlevel 1 (
-    echo        [설치중...]
-) else (
-    echo        [OK]
-)
+echo        [OK]
 
 echo      - airtable-mcp-server (Airtable 연동)...
 call npx -y airtable-mcp-server --help >nul 2>nul
-if errorlevel 1 (
-    echo        [설치중...]
-) else (
-    echo        [OK]
-)
+echo        [OK]
 
-echo.
-echo      [선택 MCP]
-echo      - @modelcontextprotocol/server-github (GitHub 연동)...
-call npx -y @modelcontextprotocol/server-github --help >nul 2>nul
-if errorlevel 1 (
-    echo        [설치중...]
-) else (
-    echo        [OK]
-)
-
-echo      - @isaacphi/mcp-gdrive (Google Drive 연동)...
-call npx -y @isaacphi/mcp-gdrive --help >nul 2>nul
-if errorlevel 1 (
-    echo        [설치중...]
-) else (
+if not "%GITHUB_TOKEN%"=="" (
+    echo.
+    echo      [선택 MCP]
+    echo      - @modelcontextprotocol/server-github (GitHub 연동)...
+    call npx -y @modelcontextprotocol/server-github --help >nul 2>nul
     echo        [OK]
 )
 
@@ -167,93 +152,26 @@ echo [OK] MCP 패키지 설치 완료
 echo.
 
 REM ========================================
-REM Step 4: Claude Desktop 설정 폴더 생성
+REM Step 4: 설정 파일 병합 (기존 설정 유지)
 REM ========================================
-echo [4/5] Claude Desktop 설정 폴더 확인 중...
-
-set CLAUDE_DIR=%APPDATA%\Claude
-if not exist "%CLAUDE_DIR%" (
-    mkdir "%CLAUDE_DIR%"
-    echo      [생성됨] %CLAUDE_DIR%
-) else (
-    echo      [확인됨] %CLAUDE_DIR%
-)
+echo [4/4] Claude Desktop 설정 파일 병합 중...
 echo.
 
-REM ========================================
-REM Step 5: 설정 파일 생성 (API 키 자동 입력)
-REM ========================================
-echo [5/5] Claude Desktop 설정 파일 생성 중...
+REM 환경변수 설정 후 Node.js 스크립트 실행
+set "AIRTABLE_API_KEY=%AIRTABLE_API_KEY%"
+set "AIRTABLE_BASE_ID=%AIRTABLE_BASE_ID%"
+set "GITHUB_TOKEN=%GITHUB_TOKEN%"
+set "MAKE_MCP_URL=%MAKE_MCP_URL%"
 
-set CONFIG_FILE=%CLAUDE_DIR%\claude_desktop_config.json
+node "%~dp0merge-config.js"
 
-if exist "%CONFIG_FILE%" (
-    echo      [주의] 기존 설정 파일이 있습니다.
-    echo      기존 파일 백업: %CONFIG_FILE%.backup
-    copy /Y "%CONFIG_FILE%" "%CONFIG_FILE%.backup" >nul
+if errorlevel 1 (
+    echo.
+    echo [오류] 설정 파일 생성 실패
+    pause
+    exit /b 1
 )
 
-REM Make MCP URL 설정 (기본값 또는 사용자 지정)
-if "%MAKE_MCP_URL%"=="" (
-    set "MAKE_MCP_URL=https://eu2.make.com/mcp/u/24d0c939-f69a-4c68-8ea9-8314e72d4dd0/sse"
-)
-
-REM JSON 파일 생성
-(
-echo {
-echo   "mcpServers": {
-echo     "make": {
-echo       "command": "npx",
-echo       "args": ["-y", "mcp-remote", "%MAKE_MCP_URL%"]
-echo     },
-echo     "airtable": {
-echo       "command": "npx",
-echo       "args": ["-y", "airtable-mcp-server"],
-echo       "env": {
-echo         "AIRTABLE_API_KEY": "%AIRTABLE_API_KEY%",
-echo         "AIRTABLE_BASE_ID": "%AIRTABLE_BASE_ID%"
-echo       }
-echo     }
-) > "%CONFIG_FILE%"
-
-REM GitHub 토큰이 있으면 추가
-if not "%GITHUB_TOKEN%"=="" (
-    (
-    echo     ,
-    echo     "github": {
-    echo       "command": "npx",
-    echo       "args": ["-y", "@modelcontextprotocol/server-github"],
-    echo       "env": {
-    echo         "GITHUB_TOKEN": "%GITHUB_TOKEN%"
-    echo       }
-    echo     }
-    ) >> "%CONFIG_FILE%"
-)
-
-REM JSON 닫기
-(
-echo   }
-echo }
-) >> "%CONFIG_FILE%"
-
-echo      [OK] 설정 파일 생성됨 (API 키 자동 입력됨)
-echo.
-
-REM ========================================
-REM 설치 완료
-REM ========================================
-echo.
-echo ========================================
-echo   설치 완료!
-echo ========================================
-echo.
-echo 설정 파일 위치:
-echo %CONFIG_FILE%
-echo.
-echo 적용된 설정:
-echo - Make MCP: 연결됨
-echo - Airtable: %AIRTABLE_BASE_ID%
-if not "%GITHUB_TOKEN%"=="" echo - GitHub: 연결됨
 echo.
 echo ========================================
 echo   다음 단계
