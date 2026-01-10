@@ -1,0 +1,46 @@
+{
+  "name": "External API to Airtable",
+  "description": "외부 API 데이터를 Airtable에 저장하는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "util:SetVariables",
+      "version": 1,
+      "description": "스케줄 트리거 시작"
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "description": "외부 API 호출",
+      "mapper": {
+        "url": "{{API_ENDPOINT}}",
+        "method": "GET",
+        "parseResponse": true
+      }
+    },
+    {
+      "id": 5,
+      "module": "airtable:ActionSearchRecords",
+      "version": 3,
+      "description": "중복 체크",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 3600
+  },
+  "notes": {
+    "placeholders": {
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "TARGET_TABLE": "데이터 저장할 테이블 ID",
+      "API_ENDPOINT": "외부 API URL",
+      "API_KEY": "API 인증 키"
+    }
+  }
+}

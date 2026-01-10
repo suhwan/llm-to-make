@@ -1,0 +1,34 @@
+{
+  "name": "Text to Image Generator",
+  "description": "프롬프트에서 이미지를 생성하는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "description": "트리거: Content_Requests 새 레코드 감지",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "base": "{{AIRTABLE_BASE_ID}}",
+        "table": "Content_Requests",
+        "triggerField": "Created_At",
+        "maxRecords": 10
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 900
+  },
+  "notes": {
+    "placeholders": {
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "RUNWARE_CONNECTION_ID": "13479550 (기존 연결)",
+      "OPENAI_CONNECTION_ID": "추가 필요"
+    }
+  }
+}

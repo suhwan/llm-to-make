@@ -1,0 +1,59 @@
+{
+  "name": "Image to Video Generator",
+  "description": "Generated_Contents 이미지를 영상으로 변환하는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "description": "트리거: Webhook으로 레코드 ID 수신",
+      "parameters": {
+        "hook": "{{WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {}
+    },
+    {
+      "id": 2,
+      "module": "airtable:ActionSearchRecords",
+      "version": 3,
+      "description": "Generated_Contents에서 이미지 가져오기",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "formula": "record_id() = \"{{1.recordID}}\"",
+        "maxRecords": "1",
+        "useColumnId": false,
+        "fields": [
+          "Request_ID",
+          "Content_ID",
+          "Generated_Images",
+          "Final_Prompt",
+          "Status"
+        ]
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "immediately"
+  },
+  "notes": {
+    "placeholders": {
+      "WEBHOOK_ID": "Webhook ID (나중에 생성)",
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "FAL_AI_CONNECTION_ID": "추가 필요",
+      "RUNWAY_CONNECTION_ID": "추가 필요",
+      "GOOGLE_DRIVE_CONNECTION_ID": "12046957 (기존 연결)",
+      "GOOGLE_DRIVE_FOLDER_ID": "업로드 폴더 ID"
+    },
+    "required_airtable_fields": [
+      "Generated_Videos (Attachment)",
+      "Video_Status (Single Select)",
+      "Video_Provider (Single Select)"
+    ]
+  }
+}
