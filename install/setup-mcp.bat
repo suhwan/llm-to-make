@@ -50,6 +50,7 @@ echo [2/4] MCP 패키지 설치 중...
 echo      (처음 실행 시 몇 분 소요될 수 있습니다)
 echo.
 
+echo      [필수 MCP]
 echo      - mcp-remote (Make.com 연동)...
 call npx -y mcp-remote --help >nul 2>nul
 if errorlevel 1 (
@@ -66,6 +67,8 @@ if errorlevel 1 (
     echo        [OK]
 )
 
+echo.
+echo      [선택 MCP]
 echo      - @modelcontextprotocol/server-github (GitHub 연동)...
 call npx -y @modelcontextprotocol/server-github --help >nul 2>nul
 if errorlevel 1 (
@@ -143,11 +146,11 @@ echo.
 echo 1. 설정 파일에서 API 키 입력:
 echo    - 메모장으로 위 파일을 열어서 아래 값들을 수정하세요:
 echo.
-echo    [Airtable]
+echo    [필수] Airtable
 echo    - YOUR_AIRTABLE_API_KEY   → Airtable API 키
 echo    - YOUR_AIRTABLE_BASE_ID   → Airtable Base ID
 echo.
-echo    [GitHub]
+echo    [선택] GitHub (사용 안하면 github 섹션 삭제)
 echo    - YOUR_GITHUB_TOKEN       → GitHub 개인 액세스 토큰
 echo.
 echo 2. Claude Desktop 재시작:
