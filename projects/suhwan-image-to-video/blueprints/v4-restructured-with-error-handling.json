@@ -1,0 +1,673 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": -300,
+          "y": 0,
+          "name": "0. Webhook Trigger"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "record": "{{1.recordId}}",
+        "typecast": true
+      },
+      "module": "airtable:ActionGetRecord",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1. Get Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 19,
+      "mapper": {
+        "id": "{{2.id}}",
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "typecast": true,
+        "Video_Status": "생성중"
+      },
+      "module": "airtable:ActionUpdateRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 200,
+          "y": 0,
+          "name": "1-1. Video_Status: 생성중"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 3,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblRdSXt5Lb9uLLr3",
+        "Prompt": "{{2.Final_Prompt}}",
+        "Status": "생성중",
+        "Provider": "{{1.provider}}",
+        "Video_ID": "video_{{2.Request_ID}}_{{formatDate(now; \"YYYYMMDD_HHmmss\")}}",
+        "typecast": true,
+        "Parent_Content": [
+          "{{2.id}}"
+        ]
+      },
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 400,
+          "y": 0,
+          "name": "2. Create Video Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 4,
+      "mapper": {
+        "variables": [
+          {
+            "name": "imageUrl",
+            "value": "{{2.`Generated_Images`[].url}}"
+          },
+          {
+            "name": "videoPrompt",
+            "value": "{{2.Final_Prompt}}"
+          },
+          {
+            "name": "recordId",
+            "value": "{{2.id}}"
+          },
+          {
+            "name": "requestId",
+            "value": "{{2.Request_ID}}"
+          },
+          {
+            "name": "provider",
+            "value": "{{1.provider}}"
+          },
+          {
+            "name": "videoRecordId",
+            "value": "{{3.id}}"
+          },
+          {
+            "name": "errorMessage",
+            "value": ""
+          },
+          {
+            "name": "videoUrl",
+            "value": ""
+          }
+        ]
+      },
+      "module": "util:SetVariables",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "3. Set Variables"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 6,
+              "mapper": {
+                "url": "https://queue.fal.run/fal-ai/kling-video/v1/standard/image-to-video",
+                "body": "{\"prompt\": \"{{4.videoPrompt}}\", \"image_url\": \"{{4.imageUrl}}\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Key 6c3ce1ed469795669aaaceaf69780cfc"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json",
+                "parseResponse": true,
+                "timeout": 30,
+                "followRedirect": true,
+                "followAllRedirects": false,
+                "shareCookies": false,
+                "rejectUnauthorized": true
+              },
+              "module": "http:ActionSendData",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 1000,
+                  "y": -300,
+                  "name": "5a. Kling Submit"
+                }
+              },
+              "parameters": {
+                "handleErrors": true
+              }
+            },
+            {
+              "id": 21,
+              "mapper": {
+                "name": "falRequestId",
+                "value": "{{if(6.statusCode = 200; 6.data.request_id; \"\")}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -300,
+                  "name": "5a-1. Save Kling Request ID"
+                }
+              }
+            },
+            {
+              "id": 22,
+              "mapper": {
+                "name": "errorMessage",
+                "value": "{{if(6.statusCode != 200; concat(\"Kling Submit Error: \"; toString(6.statusCode); \" - \"; toString(6.data)); \"\")}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1400,
+                  "y": -300,
+                  "name": "5a-2. Check Kling Error"
+                }
+              }
+            },
+            {
+              "id": 23,
+              "module": "builtin:BasicRouter",
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 8,
+                      "mapper": {
+                        "time": 60
+                      },
+                      "module": "util:FunctionSleep",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": -400,
+                          "name": "7a. Wait 60s"
+                        }
+                      }
+                    },
+                    {
+                      "id": 9,
+                      "mapper": {
+                        "url": "https://queue.fal.run/fal-ai/kling-video/v1/standard/image-to-video/requests/{{21.falRequestId}}",
+                        "method": "GET",
+                        "headers": [
+                          {
+                            "name": "Authorization",
+                            "value": "Key 6c3ce1ed469795669aaaceaf69780cfc"
+                          }
+                        ],
+                        "parseResponse": true,
+                        "timeout": 30
+                      },
+                      "module": "http:ActionSendData",
+                      "version": 3,
+                      "metadata": {
+                        "designer": {
+                          "x": 2000,
+                          "y": -400,
+                          "name": "8a. Kling Get Result"
+                        }
+                      },
+                      "parameters": {
+                        "handleErrors": true
+                      }
+                    },
+                    {
+                      "id": 24,
+                      "mapper": {
+                        "name": "videoUrl",
+                        "value": "{{if(9.data.video.url; 9.data.video.url; \"\")}}"
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 2200,
+                          "y": -400,
+                          "name": "9a. Save Video URL"
+                        }
+                      }
+                    },
+                    {
+                      "id": 25,
+                      "mapper": {
+                        "name": "errorMessage",
+                        "value": "{{if(emptystring(24.videoUrl); concat(\"Kling Result Error: No video URL. Status: \"; toString(9.data.status)); \"\")}}"
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": -400,
+                          "name": "9a-1. Check Result Error"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 26,
+                      "mapper": {
+                        "name": "videoUrl",
+                        "value": ""
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": -200,
+                          "name": "Kling Submit Failed"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1600,
+                  "y": -300,
+                  "name": "6a. Check Kling Submit"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "mapper": {
+                "url": "/videoInference",
+                "body": "{\"taskType\": \"videoInference\", \"taskUUID\": \"{{uuid}}\", \"inputImage\": \"{{4.imageUrl}}\", \"positivePrompt\": \"{{4.videoPrompt}}\", \"model\": \"runware:101@1\", \"width\": 1280, \"height\": 720, \"duration\": 5}",
+                "method": "POST"
+              },
+              "module": "runware-ai:universal",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1000,
+                  "y": 300,
+                  "name": "5b. Runware Video"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 13479550
+              }
+            },
+            {
+              "id": 27,
+              "mapper": {
+                "name": "runwareTaskId",
+                "value": "{{11.taskUUID}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 300,
+                  "name": "6b. Save Task ID"
+                }
+              }
+            },
+            {
+              "id": 28,
+              "mapper": {
+                "name": "errorMessage",
+                "value": "{{if(emptystring(27.runwareTaskId); \"Runware Submit Error: No task ID returned\"; \"\")}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1400,
+                  "y": 300,
+                  "name": "6b-1. Check Runware Error"
+                }
+              }
+            },
+            {
+              "id": 29,
+              "module": "builtin:BasicRouter",
+              "routes": [
+                {
+                  "flow": [
+                    {
+                      "id": 13,
+                      "mapper": {
+                        "time": 90
+                      },
+                      "module": "util:FunctionSleep",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": 200,
+                          "name": "7b. Wait 90s"
+                        }
+                      }
+                    },
+                    {
+                      "id": 14,
+                      "mapper": {
+                        "url": "/taskStatus",
+                        "body": "{\"taskUUID\": \"{{27.runwareTaskId}}\"}",
+                        "method": "POST"
+                      },
+                      "module": "runware-ai:universal",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 2000,
+                          "y": 200,
+                          "name": "8b. Runware Get Result"
+                        }
+                      },
+                      "parameters": {
+                        "__IMTCONN__": 13479550
+                      }
+                    },
+                    {
+                      "id": 30,
+                      "mapper": {
+                        "name": "videoUrl",
+                        "value": "{{if(14.outputVideo; 14.outputVideo; \"\")}}"
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 2200,
+                          "y": 200,
+                          "name": "9b. Save Video URL"
+                        }
+                      }
+                    },
+                    {
+                      "id": 31,
+                      "mapper": {
+                        "name": "errorMessage",
+                        "value": "{{if(emptystring(30.videoUrl); concat(\"Runware Result Error: No video URL. Status: \"; toString(14.status)); \"\")}}"
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 2400,
+                          "y": 200,
+                          "name": "9b-1. Check Result Error"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "flow": [
+                    {
+                      "id": 32,
+                      "mapper": {
+                        "name": "videoUrl",
+                        "value": ""
+                      },
+                      "module": "util:SetVariable2",
+                      "version": 1,
+                      "metadata": {
+                        "designer": {
+                          "x": 1800,
+                          "y": 400,
+                          "name": "Runware Submit Failed"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1600,
+                  "y": 300,
+                  "name": "Check Runware Submit"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 800,
+          "y": 0,
+          "name": "4. Provider Router"
+        }
+      }
+    },
+    {
+      "id": 40,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 16,
+              "mapper": {
+                "url": "{{ifempty(24.videoUrl; 30.videoUrl)}}",
+                "method": "GET"
+              },
+              "module": "http:ActionGetFile",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 2800,
+                  "y": -100,
+                  "name": "10. Download Video"
+                }
+              },
+              "parameters": {
+                "handleErrors": true
+              }
+            },
+            {
+              "id": 17,
+              "mapper": {
+                "data": "{{16.data}}",
+                "name": "video_{{4.requestId}}_{{formatDate(now; \"YYYYMMDD_HHmmss\")}}.mp4",
+                "folderId": "14wcU3iJeN1egdTYiwB2r5gKcZmFaBgcC"
+              },
+              "module": "google-drive:uploadAFile",
+              "version": 4,
+              "metadata": {
+                "designer": {
+                  "x": 3000,
+                  "y": -100,
+                  "name": "11. Upload to Drive"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 12046957
+              }
+            },
+            {
+              "id": 18,
+              "mapper": {
+                "id": "{{4.videoRecordId}}",
+                "base": "appzQEgOxUpCYGmk7",
+                "Video": [
+                  {
+                    "url": "{{17.webContentLink}}"
+                  }
+                ],
+                "table": "tblRdSXt5Lb9uLLr3",
+                "Status": "완료",
+                "Provider": "{{4.provider}}",
+                "typecast": true
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 3200,
+                  "y": -100,
+                  "name": "12. Update Video Record: 완료"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 12046948
+              }
+            },
+            {
+              "id": 20,
+              "mapper": {
+                "id": "{{4.recordId}}",
+                "base": "appzQEgOxUpCYGmk7",
+                "table": "tblYEykfAmWSrtcP8",
+                "typecast": true,
+                "Video_Status": "완료"
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 3400,
+                  "y": -100,
+                  "name": "13. Video_Status: 완료"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 12046948
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 41,
+              "mapper": {
+                "id": "{{4.videoRecordId}}",
+                "base": "appzQEgOxUpCYGmk7",
+                "table": "tblRdSXt5Lb9uLLr3",
+                "Status": "실패",
+                "typecast": true,
+                "Error_Log": "{{ifempty(22.errorMessage; ifempty(25.errorMessage; ifempty(28.errorMessage; ifempty(31.errorMessage; \"Unknown error: No video URL generated\"))))}}"
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 2800,
+                  "y": 100,
+                  "name": "E1. Update Video: 실패"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 12046948
+              }
+            },
+            {
+              "id": 42,
+              "mapper": {
+                "id": "{{4.recordId}}",
+                "base": "appzQEgOxUpCYGmk7",
+                "table": "tblYEykfAmWSrtcP8",
+                "typecast": true,
+                "Error_Log": "{{ifempty(22.errorMessage; ifempty(25.errorMessage; ifempty(28.errorMessage; ifempty(31.errorMessage; \"Unknown error: No video URL generated\"))))}}",
+                "Video_Status": "실패"
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 3000,
+                  "y": 100,
+                  "name": "E2. Update Content: 실패"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 12046948
+              }
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 2600,
+          "y": 0,
+          "name": "Final: Success or Error"
+        }
+      }
+    }
+  ],
+  "name": "suhwan-image-to-video-v4 (Full Error Handling)",
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "dlq": true,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "autoCommitTriggerLast": true,
+      "freshVariables": false
+    }
+  }
+}

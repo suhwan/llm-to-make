@@ -1,0 +1,110 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblRdSXt5Lb9uLLr3",
+        "limit": 50,
+        "formula": "AND({Status}='생성중', DATETIME_DIFF(NOW(), CREATED_TIME(), 'minutes') > 10)"
+      },
+      "module": "airtable:ActionSearchRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1. Find Stale Video Records"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 2,
+      "mapper": {
+        "id": "{{1.id}}",
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblRdSXt5Lb9uLLr3",
+        "Status": "실패",
+        "typecast": true,
+        "Error_Log": "자동 복구: 10분 이상 생성중 상태로 유지되어 실패 처리됨 ({{formatDate(now; \"YYYY-MM-DD HH:mm:ss\")}})"
+      },
+      "module": "airtable:ActionUpdateRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "2. Update Video Status to 실패"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 3,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "record": "{{1.`Parent_Content`[]}}"
+      },
+      "module": "airtable:ActionGetRecord",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "3. Get Parent Content Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 4,
+      "mapper": {
+        "id": "{{3.id}}",
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "typecast": true,
+        "Error_Log": "자동 복구: 영상 생성 시간 초과로 실패 처리됨 ({{formatDate(now; \"YYYY-MM-DD HH:mm:ss\")}})",
+        "Video_Status": "실패"
+      },
+      "module": "airtable:ActionUpdateRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "4. Update Content Video_Status to 실패"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    }
+  ],
+  "name": "Error Recovery - Image to Video",
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "dlq": false,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "autoCommitTriggerLast": true,
+      "freshVariables": false
+    }
+  }
+}

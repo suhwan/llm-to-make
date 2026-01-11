@@ -66,7 +66,7 @@ cat .mcp.json  # 설정 파일 확인
 ## 설치 확인 체크리스트
 
 | 항목 | 확인 명령 | 정상 결과 |
-|------|-----------|------------|
+|------|-----------|-----------|
 | Node.js | `node --version` | `v20.x.x` |
 | .env 파일 | `cat install/.env` | API 키 설정됨 |
 | .mcp.json | `cat .mcp.json` | MCP 서버 설정됨 |
@@ -98,7 +98,7 @@ llm-to-make/
 ## 필요한 API 키
 
 | 서비스 | 발급 링크 | 필수 여부 |
-|--------|-----------|------------|
+|--------|-----------|-----------|
 | Make.com MCP URL | [Organization Settings > MCP](https://www.make.com/) | 필수 |
 | Airtable API Key | [airtable.com/create/tokens](https://airtable.com/create/tokens) | 필수 |
 | GitHub Token | [github.com/settings/tokens](https://github.com/settings/tokens) | 선택 |

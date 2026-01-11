@@ -1,0 +1,399 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": -300,
+          "y": 0,
+          "name": "0. Webhook Trigger"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblYEykfAmWSrtcP8",
+        "record": "{{1.recordId}}",
+        "typecast": true
+      },
+      "module": "airtable:ActionGetRecord",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "1. Get Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 3,
+      "mapper": {
+        "base": "appzQEgOxUpCYGmk7",
+        "table": "tblRdSXt5Lb9uLLr3",
+        "Prompt": "{{2.Final_Prompt}}",
+        "Status": "생성중",
+        "Provider": "{{1.provider}}",
+        "Video_ID": "video_{{2.Request_ID}}_{{formatDate(now; \"YYYYMMDD_HHmmss\")}}",
+        "typecast": true,
+        "Parent_Content": [
+          "{{2.id}}"
+        ]
+      },
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "2. Create Video Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    },
+    {
+      "id": 4,
+      "mapper": {
+        "variables": [
+          {
+            "name": "imageUrl",
+            "value": "{{2.`Generated_Images`[].url}}"
+          },
+          {
+            "name": "videoPrompt",
+            "value": "{{2.Final_Prompt}}"
+          },
+          {
+            "name": "recordId",
+            "value": "{{2.id}}"
+          },
+          {
+            "name": "requestId",
+            "value": "{{2.Request_ID}}"
+          },
+          {
+            "name": "provider",
+            "value": "{{1.provider}}"
+          },
+          {
+            "name": "videoRecordId",
+            "value": "{{3.id}}"
+          }
+        ]
+      },
+      "module": "util:SetVariables",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0,
+          "name": "3. Set Variables"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 6,
+              "mapper": {
+                "url": "https://queue.fal.run/fal-ai/kling-video/v1/standard/image-to-video",
+                "body": "{\"prompt\": \"{{4.videoPrompt}}\", \"image_url\": \"{{4.imageUrl}}\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Key 6c3ce1ed469795669aaaceaf69780cfc"
+                  },
+                  {
+                    "name": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "bodyType": "raw",
+                "contentType": "application/json"
+              },
+              "module": "http:ActionSendData",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": -200,
+                  "name": "5a. Kling Submit"
+                }
+              },
+              "parameters": {}
+            },
+            {
+              "id": 7,
+              "mapper": {
+                "name": "falRequestId",
+                "value": "{{6.data.request_id}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": -200,
+                  "name": "6a. Save Request ID"
+                }
+              }
+            },
+            {
+              "id": 8,
+              "mapper": {
+                "time": 60
+              },
+              "module": "util:FunctionSleep",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": -200,
+                  "name": "7a. Wait 60s"
+                }
+              }
+            },
+            {
+              "id": 9,
+              "mapper": {
+                "url": "https://queue.fal.run/fal-ai/kling-video/v1/standard/image-to-video/requests/{{7.falRequestId}}",
+                "method": "GET",
+                "headers": [
+                  {
+                    "name": "Authorization",
+                    "value": "Key 6c3ce1ed469795669aaaceaf69780cfc"
+                  }
+                ]
+              },
+              "module": "http:ActionSendData",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": -200,
+                  "name": "8a. Kling Get Result"
+                }
+              },
+              "parameters": {}
+            },
+            {
+              "id": 10,
+              "mapper": {
+                "name": "videoUrl",
+                "value": "{{9.data.video.url}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": -200,
+                  "name": "9a. Save Video URL"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 11,
+              "mapper": {
+                "url": "/videoInference",
+                "body": "{\"taskType\": \"videoInference\", \"taskUUID\": \"{{uuid}}\", \"inputImage\": \"{{4.imageUrl}}\", \"positivePrompt\": \"{{4.videoPrompt}}\", \"model\": \"runware:101@1\", \"width\": 1280, \"height\": 720, \"duration\": 5}",
+                "method": "POST"
+              },
+              "module": "runware-ai:universal",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1200,
+                  "y": 200,
+                  "name": "5b. Runware Video"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 13479550
+              }
+            },
+            {
+              "id": 12,
+              "mapper": {
+                "name": "runwareTaskId",
+                "value": "{{11.taskUUID}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1500,
+                  "y": 200,
+                  "name": "6b. Save Task ID"
+                }
+              }
+            },
+            {
+              "id": 13,
+              "mapper": {
+                "time": 90
+              },
+              "module": "util:FunctionSleep",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 200,
+                  "name": "7b. Wait 90s"
+                }
+              }
+            },
+            {
+              "id": 14,
+              "mapper": {
+                "url": "/taskStatus",
+                "body": "{\"taskUUID\": \"{{12.runwareTaskId}}\"}",
+                "method": "POST"
+              },
+              "module": "runware-ai:universal",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2100,
+                  "y": 200,
+                  "name": "8b. Runware Get Result"
+                }
+              },
+              "parameters": {
+                "__IMTCONN__": 13479550
+              }
+            },
+            {
+              "id": 15,
+              "mapper": {
+                "name": "videoUrl",
+                "value": "{{14.outputVideo}}"
+              },
+              "module": "util:SetVariable2",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2400,
+                  "y": 200,
+                  "name": "9b. Save Video URL"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0,
+          "name": "4. Provider Router"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "mapper": {
+        "url": "{{ifempty(10.videoUrl; 15.videoUrl)}}",
+        "method": "GET"
+      },
+      "module": "http:ActionGetFile",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0,
+          "name": "10. Download Video"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 17,
+      "mapper": {
+        "data": "{{16.data}}",
+        "name": "video_{{4.requestId}}_{{formatDate(now; \"YYYYMMDD_HHmmss\")}}.mp4",
+        "folderId": "14wcU3iJeN1egdTYiwB2r5gKcZmFaBgcC"
+      },
+      "module": "google-drive:uploadAFile",
+      "version": 4,
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0,
+          "name": "11. Upload to Drive"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046957
+      }
+    },
+    {
+      "id": 18,
+      "mapper": {
+        "id": "{{4.videoRecordId}}",
+        "base": "appzQEgOxUpCYGmk7",
+        "Video": [
+          {
+            "url": "{{17.webContentLink}}"
+          }
+        ],
+        "table": "tblRdSXt5Lb9uLLr3",
+        "Status": "완료",
+        "Provider": "{{ifempty(10.videoUrl; 'Runware'; 'Kling')}}",
+        "typecast": true
+      },
+      "module": "airtable:ActionUpdateRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0,
+          "name": "12. Update Video Record"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 12046948
+      }
+    }
+  ],
+  "name": "suhwan-image-to-video-v1 (Full)",
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "designer": {
+      "orphans": []
+    },
+    "scenario": {
+      "dlq": true,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "errorHandler": "break",
+      "autoCommitTriggerLast": true
+    }
+  }
+}
