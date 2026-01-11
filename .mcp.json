@@ -10,22 +10,22 @@
     "github": {
       "command": "npx",
       "args": ["-y", "dotenv-cli", "-e", ".env", "--", "npx", "-y", "@modelcontextprotocol/server-github"],
-      "description": "GitHub repository management"
+      "description": "GitHub repository 관리 - commit, push, PR 생성"
     },
     "airtable": {
       "command": "npx",
       "args": ["-y", "dotenv-cli", "-e", ".env", "--", "npx", "-y", "airtable-mcp-server"],
-      "description": "Airtable data management"
+      "description": "Airtable 데이터 조회/수정 - 스키마 분석, 샘플 데이터 추출"
     },
     "gdrive": {
       "command": "npx",
       "args": ["-y", "dotenv-cli", "-e", ".env", "--", "npx", "-y", "@isaacphi/mcp-gdrive"],
-      "description": "Google Drive file management"
+      "description": "Google Drive 파일 업로드/공유 - Make 시나리오 검증용"
     },
     "make": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://eu2.make.com/mcp/u/24d0c939-f69a-4c68-8ea9-8314e72d4dd0/sse"],
-      "description": "Make.com scenario management"
+      "command": "node",
+      "args": ["install/make-mcp-wrapper.js"],
+      "description": "Make.com 시나리오 실행 및 관리"
     }
   }
 }
