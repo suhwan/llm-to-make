@@ -66,7 +66,7 @@ Read 도구로 /home/ubuntu/code/llm-to-make/.env 파일 읽기 시도
 .env 파일에서 필수 환경변수를 확인합니다.
 
 **확인할 변수**:
-1. `MAKE_MCP_TOKEN` - Make.com API 토큰
+1. `MAKE_MCP_URL` - Make.com MCP URL
 2. `AIRTABLE_API_KEY` - Airtable API 키
 3. `AIRTABLE_BASE_ID` - Airtable Base ID
 
@@ -78,7 +78,7 @@ Read 도구로 /home/ubuntu/code/llm-to-make/.env 파일 읽기 시도
 ```
 📋 환경변수 확인 중...
 
-✅ MAKE_MCP_TOKEN: 설정됨
+✅ MAKE_MCP_URL: 설정됨
 ✅ AIRTABLE_API_KEY: 설정됨
 ✅ AIRTABLE_BASE_ID: appzQEgOxUpCYGmk7
 
@@ -98,7 +98,7 @@ Read 도구로 /home/ubuntu/code/llm-to-make/.env 파일 읽기 시도
 mcp__make__organizations_list 호출
 ```
 - 성공 → 조직 목록 표시
-- 실패 → MAKE_MCP_TOKEN 확인 안내
+- 실패 → MAKE_MCP_URL 확인 안내
 
 **Airtable MCP 테스트**:
 ```
@@ -198,7 +198,7 @@ Model_Personas, SNS_Posts
 🎬 Make 시나리오 분석
 
 ┌─────────────────────────────────────────────────────────┐
-│ 시나리오: suhwan-image-to-video-v1 (ID: 8436833)        │
+│ 시나리오: suwhan-image-to-video-v1 (ID: 8436833)        │
 │ └─ 상태: 활성화                                          │
 │ └─ 트리거: Airtable Watch (Generated_Contents)          │
 │                                                          │

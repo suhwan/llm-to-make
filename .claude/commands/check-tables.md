@@ -32,7 +32,7 @@ detailLevel: "identifiersOnly"
 총 {N}개 테이블:
 
 | # | 테이블명 | 테이블 ID |
-|---|----------|-----------|
+|---|----------|------------|
 | 1 | Models | tblOfVAOxlY29TBjH |
 | 2 | Content_Requests | tblImBDg1HTY6sSsP |
 | 3 | Generated_Contents | tblYEykfAmWSrtcP8 |

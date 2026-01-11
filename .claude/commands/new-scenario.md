@@ -233,7 +233,7 @@ teamId: 2759651  (또는 .env의 MAKE_TEAM_ID)
 **템플릿별 필요 연결**:
 
 | 템플릿 | 필요한 연결 |
-|--------|------------|
+|--------|-------------|
 | 이미지→영상 | Airtable, Google Drive, Runware.AI (또는 fal-ai) |
 | 텍스트→이미지 | Airtable, Runware.AI |
 | Airtable→Sheets | Airtable, Google Sheets |
