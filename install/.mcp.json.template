@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "make": {
+      "command": "node",
+      "args": ["install/make-mcp-wrapper.js"]
+    },
+    "airtable": {
+      "command": "npx",
+      "args": ["-y", "airtable-mcp-server"],
+      "env": {
+        "AIRTABLE_API_KEY": "YOUR_AIRTABLE_API_KEY_HERE",
+        "AIRTABLE_BASE_ID": "YOUR_BASE_ID_HERE"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      }
+    }
+  }
+}
