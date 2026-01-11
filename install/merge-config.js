@@ -12,7 +12,13 @@ const path = require('path');
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const MAKE_MCP_URL = process.env.MAKE_MCP_URL || 'https://eu2.make.com/mcp/u/24d0c939-f69a-4c68-8ea9-8314e72d4dd0/sse';
+const MAKE_MCP_URL = process.env.MAKE_MCP_URL;
+
+if (!MAKE_MCP_URL) {
+    console.error('[ERROR] MAKE_MCP_URL environment variable not set.');
+    console.error('  Please add MAKE_MCP_URL to your .env file.');
+    process.exit(1);
+}
 
 // Claude Desktop config file path
 const CLAUDE_DIR = path.join(process.env.APPDATA || '', 'Claude');
