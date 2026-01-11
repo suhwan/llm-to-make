@@ -124,6 +124,184 @@ options:
     description: "현재 Airtable/Make 구조를 분석하고 문서화합니다"
 ```
 
+**"새 프로젝트 시작" 선택 시** → 추가 질문:
+```yaml
+question: "어떤 자동화를 만들고 싶으세요?"
+header: "시나리오 유형"
+options:
+  - label: "이미지/영상 생성"
+    description: "AI로 이미지나 영상을 자동 생성"
+  - label: "데이터 동기화"
+    description: "Airtable ↔ Google Sheets 등 연동"
+  - label: "SNS 자동화"
+    description: "Instagram, Threads 자동 포스팅"
+```
+
+**"기존 프로젝트 수정" 선택 시** → Step 6으로 진행 (시나리오 목록 표시)
+
+**"프로젝트 분석" 선택 시** → Step 6으로 진행 (전체 분석)
+
+---
+
+### Step 6: Airtable Base 선택 및 분석
+
+#### 6.1 Base 선택
+```yaml
+question: "어떤 Airtable Base를 사용하시겠습니까?"
+header: "Base 선택"
+options:
+  - label: "기존 Base 사용"
+    description: ".env에 설정된 Base (appzQEgOxUpCYGmk7)"
+  - label: "다른 Base 입력"
+    description: "새로운 Base ID를 직접 입력합니다"
+```
+
+**"다른 Base 입력" 선택 시**:
+- 사용자에게 Base ID 입력 요청
+- 입력받은 ID로 접근 테스트 (list_tables)
+- 성공 시 → 분석 진행
+- 실패 시 → 오류 안내 및 재입력 요청
+
+#### 6.2 Airtable 구조 분석
+`list_tables` + `describe_table`로 전체 구조 분석:
+
+```
+📊 Airtable Base 분석 결과
+
+🗂️ 테이블 구조:
+┌─────────────────────────────────────────────────────────┐
+│ Models (tblOfVAOxlY29TBjH)                              │
+│ └─ 용도: AI 모델 정보 관리                                │
+│ └─ 주요 필드: Name, Main_Image, Status                   │
+│ └─ 연결: Content_Requests, Model_Personas, SNS_Posts     │
+├─────────────────────────────────────────────────────────┤
+│ Content_Requests (tblImBDg1HTY6sSsP)                    │
+│ └─ 용도: 콘텐츠 생성 요청 접수                            │
+│ └─ 주요 필드: Model_ID, Scene_Image, Status              │
+│ └─ 연결: Models ← | → Generated_Contents                │
+├─────────────────────────────────────────────────────────┤
+│ Generated_Contents (tblYEykfAmWSrtcP8)                  │
+│ └─ 용도: 생성된 이미지 저장                               │
+│ └─ 연결: Content_Requests ← | → Generated_Video_Contents│
+└─────────────────────────────────────────────────────────┘
+
+🔗 테이블 관계도:
+Models → Content_Requests → Generated_Contents → Generated_Video_Contents
+   ↓
+Model_Personas, SNS_Posts
+```
+
+#### 6.3 Make 시나리오 분석
+`scenarios_list` + `scenarios_get`으로 시나리오별 Airtable 사용 현황 분석:
+
+```
+🎬 Make 시나리오 분석
+
+┌─────────────────────────────────────────────────────────┐
+│ 시나리오: suhwan-image-to-video-v1 (ID: 8436833)        │
+│ └─ 상태: 활성화                                          │
+│ └─ 트리거: Airtable Watch (Generated_Contents)          │
+│                                                          │
+│ 📋 사용하는 테이블:                                       │
+│    ├─ Generated_Contents (읽기/쓰기)                     │
+│    │   └─ 모듈 1: Watch - 새 레코드 감지                  │
+│    │   └─ 모듈 12: Update - 상태 업데이트                 │
+│    │                                                     │
+│    └─ Generated_Video_Contents (쓰기)                    │
+│        └─ 모듈 3: Create - 영상 레코드 생성               │
+│        └─ 모듈 18: Update - 완료 상태 저장                │
+│                                                          │
+│ 🔧 사용하는 연결:                                         │
+│    ├─ Airtable OAuth (12046948)                         │
+│    ├─ Google Drive (12046957)                           │
+│    └─ Runware.AI (13479550)                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 6.4 분석 결과 확인
+```yaml
+question: "분석 결과가 맞습니까?"
+header: "확인"
+options:
+  - label: "네, 맞습니다"
+    description: "다음 단계로 진행합니다"
+  - label: "다시 분석"
+    description: "다른 Base나 시나리오를 분석합니다"
+```
+
+---
+
+### Step 7: 프로젝트 디렉터리 생성
+
+#### 7.1 프로젝트 이름 입력
+```yaml
+question: "프로젝트 이름을 입력해주세요"
+header: "프로젝트명"
+# 사용자가 직접 입력 (예: "image-to-video", "sns-automation")
+```
+
+#### 7.2 디렉터리 생성
+```
+projects/{프로젝트명}/
+├── plan.md           # 이 프로젝트의 계획 및 상태
+├── blueprints/       # 시나리오 청사진 백업
+└── docs/             # 프로젝트별 문서
+```
+
+**Bash 명령어**:
+```bash
+mkdir -p projects/{프로젝트명}/blueprints
+mkdir -p projects/{프로젝트명}/docs
+```
+
+#### 7.3 프로젝트 plan.md 생성
+Write 도구로 `projects/{프로젝트명}/plan.md` 파일 생성:
+
+```markdown
+# {프로젝트명} 프로젝트 계획
+
+> **생성일**: {현재 날짜}
+> **상태**: 🚀 시작됨
+> **Base**: {선택한 Airtable Base ID}
+
+---
+
+## 프로젝트 개요
+
+{사용자가 선택한 용도에 따른 설명}
+
+---
+
+## 사용 리소스
+
+### Airtable 테이블
+{Step 6에서 분석한 테이블 목록}
+
+### Make 연결
+{Step 6에서 확인한 연결 목록}
+
+### 관련 시나리오
+{Step 6에서 분석한 시나리오 목록}
+
+---
+
+## Tasks
+
+### Task 1: {첫 번째 작업}
+> **상태**: ⏳ 대기
+
+- [ ] 세부 작업 1
+- [ ] 세부 작업 2
+
+---
+
+## 변경 이력
+
+| 날짜 | 버전 | 변경 내용 |
+|------|------|----------|
+| {현재 날짜} | v0.1.0 | 프로젝트 생성 |
+```
+
 ---
 
 ### Step 8: 완료 및 다음 단계 안내
