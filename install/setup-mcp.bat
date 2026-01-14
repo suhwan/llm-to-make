@@ -16,20 +16,80 @@ echo [1/5] Checking Node.js...
 where node >nul 2>nul
 if errorlevel 1 (
     echo.
-    echo [ERROR] Node.js is not installed.
+    echo [INFO] Node.js is not installed. Installing automatically...
+    echo.
+
+    REM Try winget first (Windows 10/11)
+    where winget >nul 2>nul
+    if not errorlevel 1 (
+        echo [METHOD] Using winget to install Node.js LTS...
+        echo.
+        winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+        if not errorlevel 1 (
+            echo.
+            echo [OK] Node.js installed successfully!
+            echo.
+            echo ========================================
+            echo   IMPORTANT: Restart Required
+            echo ========================================
+            echo.
+            echo Please close this window and run setup-mcp.bat again.
+            echo.
+            pause
+            exit /b 0
+        )
+    )
+
+    REM Fallback: Download and install manually
+    echo [METHOD] Downloading Node.js installer...
+    echo.
+
+    set "NODE_MSI=%TEMP%\node-install.msi"
+    set "NODE_URL=https://nodejs.org/dist/v20.11.0/node-v20.11.0-x64.msi"
+
+    REM Download using PowerShell
+    powershell -Command "& {Invoke-WebRequest -Uri '%NODE_URL%' -OutFile '%NODE_MSI%'}" 2>nul
+
+    if exist "%NODE_MSI%" (
+        echo [OK] Downloaded Node.js installer
+        echo.
+        echo [INFO] Running installer...
+        echo       Please follow the installation wizard.
+        echo.
+        msiexec /i "%NODE_MSI%" /passive /norestart
+
+        if not errorlevel 1 (
+            del "%NODE_MSI%" >nul 2>nul
+            echo.
+            echo [OK] Node.js installed successfully!
+            echo.
+            echo ========================================
+            echo   IMPORTANT: Restart Required
+            echo ========================================
+            echo.
+            echo Please close this window and run setup-mcp.bat again.
+            echo.
+            pause
+            exit /b 0
+        ) else (
+            echo [ERROR] Installation failed.
+            del "%NODE_MSI%" >nul 2>nul
+        )
+    ) else (
+        echo [ERROR] Failed to download Node.js installer.
+    )
+
     echo.
     echo ========================================
-    echo   How to Install Node.js
+    echo   Manual Installation Required
     echo ========================================
+    echo.
+    echo Automatic installation failed. Please install manually:
     echo.
     echo 1. Open https://nodejs.org/ in your browser
     echo 2. Click the "LTS" version download button
     echo 3. Run the downloaded installer
-    echo 4. Follow the installation wizard
-    echo 5. Restart your computer and run this script again
-    echo.
-    echo Direct download link:
-    echo https://nodejs.org/dist/v20.11.0/node-v20.11.0-x64.msi
+    echo 4. Restart your computer and run this script again
     echo.
     pause
     exit /b 1
