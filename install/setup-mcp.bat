@@ -9,9 +9,100 @@ echo ========================================
 echo.
 
 REM ========================================
-REM Step 1: Check Node.js
+REM Step 1: Check Git (required for Claude Code)
 REM ========================================
-echo [1/5] Checking Node.js...
+echo [1/6] Checking Git...
+
+where git >nul 2>nul
+if errorlevel 1 (
+    echo.
+    echo [INFO] Git is not installed. Installing automatically...
+    echo       (Git Bash is required for Claude Code on Windows)
+    echo.
+
+    REM Try winget first (Windows 10/11)
+    where winget >nul 2>nul
+    if not errorlevel 1 (
+        echo [METHOD] Using winget to install Git...
+        echo.
+        winget install Git.Git --accept-source-agreements --accept-package-agreements
+        if not errorlevel 1 (
+            echo.
+            echo [OK] Git installed successfully!
+            echo.
+            echo ========================================
+            echo   IMPORTANT: Restart Required
+            echo ========================================
+            echo.
+            echo Please close this window and run setup-mcp.bat again.
+            echo.
+            pause
+            exit /b 0
+        )
+    )
+
+    REM Fallback: Download and install manually
+    echo [METHOD] Downloading Git installer...
+    echo.
+
+    set "GIT_EXE=%TEMP%\git-install.exe"
+    set "GIT_URL=https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/Git-2.43.0-64-bit.exe"
+
+    REM Download using PowerShell
+    powershell -Command "& {Invoke-WebRequest -Uri '%GIT_URL%' -OutFile '%GIT_EXE%'}" 2>nul
+
+    if exist "%GIT_EXE%" (
+        echo [OK] Downloaded Git installer
+        echo.
+        echo [INFO] Running installer...
+        echo       Please follow the installation wizard.
+        echo.
+        "%GIT_EXE%" /VERYSILENT /NORESTART
+
+        if not errorlevel 1 (
+            del "%GIT_EXE%" >nul 2>nul
+            echo.
+            echo [OK] Git installed successfully!
+            echo.
+            echo ========================================
+            echo   IMPORTANT: Restart Required
+            echo ========================================
+            echo.
+            echo Please close this window and run setup-mcp.bat again.
+            echo.
+            pause
+            exit /b 0
+        ) else (
+            echo [ERROR] Installation failed.
+            del "%GIT_EXE%" >nul 2>nul
+        )
+    ) else (
+        echo [ERROR] Failed to download Git installer.
+    )
+
+    echo.
+    echo ========================================
+    echo   Manual Installation Required
+    echo ========================================
+    echo.
+    echo Automatic installation failed. Please install manually:
+    echo.
+    echo 1. Open https://git-scm.com/downloads/win in your browser
+    echo 2. Download and run the installer
+    echo 3. Restart your computer and run this script again
+    echo.
+    pause
+    exit /b 1
+)
+
+for /f "tokens=*" %%i in ('git --version') do set GIT_VERSION=%%i
+echo [OK] Git found: %GIT_VERSION%
+echo.
+
+REM ========================================
+REM Step 2: Check Node.js
+REM ========================================
+echo [2/6] Checking Node.js...
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -102,7 +193,7 @@ echo.
 REM ========================================
 REM Step 2: Check .env file
 REM ========================================
-echo [2/5] Checking .env file...
+echo [3/6] Checking .env file...
 
 set ENV_FILE=%~dp0.env
 set ENV_TEMPLATE=%~dp0.env.template
@@ -181,7 +272,7 @@ exit /b 1
 REM ========================================
 REM Step 3: Check existing .mcp.json and select MCPs
 REM ========================================
-echo [3/5] Checking MCP configuration...
+echo [4/6] Checking MCP configuration...
 echo.
 
 set "MCP_JSON_PATH=%~dp0..\.mcp.json"
@@ -256,7 +347,7 @@ echo.
 REM ========================================
 REM Step 4: Install packages
 REM ========================================
-echo [4/5] Installing packages...
+echo [5/6] Installing packages...
 echo      (This may take a few minutes)
 echo.
 
@@ -315,7 +406,7 @@ echo.
 REM ========================================
 REM Step 5: Generate .mcp.json
 REM ========================================
-echo [5/5] Generating .mcp.json...
+echo [6/6] Generating .mcp.json...
 echo.
 
 REM Backup existing .mcp.json
