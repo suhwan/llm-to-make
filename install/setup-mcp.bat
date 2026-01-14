@@ -26,19 +26,22 @@ if errorlevel 1 (
         echo [METHOD] Using winget to install Git...
         echo.
         winget install Git.Git --accept-source-agreements --accept-package-agreements
+
+        REM Check if git is now available
+        set "PATH=%PATH%;C:\Program Files\Git\cmd;C:\Program Files\Git\bin"
+        where git >nul 2>nul
         if not errorlevel 1 (
             echo.
-            echo [OK] Git installed successfully!
-            echo.
-            echo ========================================
-            echo   IMPORTANT: Restart Required
-            echo ========================================
-            echo.
-            echo Please close this window and run setup-mcp.bat again.
-            echo.
-            pause
-            exit /b 0
+            echo [OK] Git is ready!
+            goto :git_ok
         )
+
+        echo.
+        echo [INFO] Git installed but needs PATH refresh.
+        echo       Please close this window and run setup-mcp.bat again.
+        echo.
+        pause
+        exit /b 0
     )
 
     REM Fallback: Download and install manually
@@ -59,23 +62,23 @@ if errorlevel 1 (
         echo.
         "%GIT_EXE%" /VERYSILENT /NORESTART
 
+        del "%GIT_EXE%" >nul 2>nul
+
+        REM Check if git is now available
+        set "PATH=%PATH%;C:\Program Files\Git\cmd;C:\Program Files\Git\bin"
+        where git >nul 2>nul
         if not errorlevel 1 (
-            del "%GIT_EXE%" >nul 2>nul
             echo.
-            echo [OK] Git installed successfully!
-            echo.
-            echo ========================================
-            echo   IMPORTANT: Restart Required
-            echo ========================================
-            echo.
-            echo Please close this window and run setup-mcp.bat again.
-            echo.
-            pause
-            exit /b 0
-        ) else (
-            echo [ERROR] Installation failed.
-            del "%GIT_EXE%" >nul 2>nul
+            echo [OK] Git is ready!
+            goto :git_ok
         )
+
+        echo.
+        echo [INFO] Git installed but needs PATH refresh.
+        echo       Please close this window and run setup-mcp.bat again.
+        echo.
+        pause
+        exit /b 0
     ) else (
         echo [ERROR] Failed to download Git installer.
     )
@@ -95,6 +98,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:git_ok
 for /f "tokens=*" %%i in ('git --version') do set GIT_VERSION=%%i
 echo [OK] Git found: %GIT_VERSION%
 echo.
@@ -116,19 +120,22 @@ if errorlevel 1 (
         echo [METHOD] Using winget to install Node.js LTS...
         echo.
         winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+
+        REM Check if node is now available
+        set "PATH=%PATH%;C:\Program Files\nodejs"
+        where node >nul 2>nul
         if not errorlevel 1 (
             echo.
-            echo [OK] Node.js installed successfully!
-            echo.
-            echo ========================================
-            echo   IMPORTANT: Restart Required
-            echo ========================================
-            echo.
-            echo Please close this window and run setup-mcp.bat again.
-            echo.
-            pause
-            exit /b 0
+            echo [OK] Node.js is ready!
+            goto :node_ok
         )
+
+        echo.
+        echo [INFO] Node.js installed but needs PATH refresh.
+        echo       Please close this window and run setup-mcp.bat again.
+        echo.
+        pause
+        exit /b 0
     )
 
     REM Fallback: Download and install manually
@@ -149,23 +156,23 @@ if errorlevel 1 (
         echo.
         msiexec /i "%NODE_MSI%" /passive /norestart
 
+        del "%NODE_MSI%" >nul 2>nul
+
+        REM Check if node is now available
+        set "PATH=%PATH%;C:\Program Files\nodejs"
+        where node >nul 2>nul
         if not errorlevel 1 (
-            del "%NODE_MSI%" >nul 2>nul
             echo.
-            echo [OK] Node.js installed successfully!
-            echo.
-            echo ========================================
-            echo   IMPORTANT: Restart Required
-            echo ========================================
-            echo.
-            echo Please close this window and run setup-mcp.bat again.
-            echo.
-            pause
-            exit /b 0
-        ) else (
-            echo [ERROR] Installation failed.
-            del "%NODE_MSI%" >nul 2>nul
+            echo [OK] Node.js is ready!
+            goto :node_ok
         )
+
+        echo.
+        echo [INFO] Node.js installed but needs PATH refresh.
+        echo       Please close this window and run setup-mcp.bat again.
+        echo.
+        pause
+        exit /b 0
     ) else (
         echo [ERROR] Failed to download Node.js installer.
     )
@@ -186,12 +193,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:node_ok
 for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
 echo [OK] Node.js found: %NODE_VERSION%
 echo.
 
 REM ========================================
-REM Step 2: Check .env file
+REM Step 3: Check .env file
 REM ========================================
 echo [3/6] Checking .env file...
 
