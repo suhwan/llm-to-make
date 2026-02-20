@@ -1,0 +1,50 @@
+{
+  "name": "SNS Auto Posting",
+  "description": "SNS_Posts 테이블의 예약 포스트를 자동으로 업로드하는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "description": "트리거: SNS_Posts 예약 시간 체크",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "base": "{{AIRTABLE_BASE_ID}}",
+        "table": "SNS_Posts",
+        "triggerField": "Scheduled_DateTime",
+        "formula": "AND({Status}='예약됨', {Scheduled_DateTime}<=NOW())",
+        "maxRecords": 10
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "description": "라우터: 플랫폼 분기"
+    },
+    {
+      "id": 6,
+      "module": "airtable:ActionUpdateRecord",
+      "version": 3,
+      "description": "SNS_Posts 상태 업데이트",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 300
+  },
+  "notes": {
+    "placeholders": {
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "INSTAGRAM_CONNECTION_ID": "추가 필요",
+      "INSTAGRAM_PAGE_ID": "Instagram 비즈니스 페이지 ID"
+    }
+  }
+}

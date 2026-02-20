@@ -1,0 +1,48 @@
+{
+  "name": "Error Notification",
+  "description": "시나리오 에러 발생 시 Slack으로 알림을 보내는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "description": "트리거: 에러 Webhook 수신",
+      "parameters": {
+        "hook": "{{ERROR_WEBHOOK_ID}}",
+        "maxResults": 1
+      },
+      "mapper": {}
+    },
+    {
+      "id": 3,
+      "module": "slack:createAMessage",
+      "version": 1,
+      "description": "Slack으로 에러 알림",
+      "parameters": {
+        "__IMTCONN__": "{{SLACK_CONNECTION_ID}}"
+      }
+    },
+    {
+      "id": 4,
+      "module": "airtable:ActionCreateRecord",
+      "version": 3,
+      "description": "Error_Log 테이블에 기록",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "immediately"
+  },
+  "notes": {
+    "placeholders": {
+      "ERROR_WEBHOOK_ID": "에러 알림 Webhook ID",
+      "SLACK_CONNECTION_ID": "추가 필요",
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "MAKE_TEAM_ID": "2759651"
+    }
+  }
+}

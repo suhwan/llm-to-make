@@ -1,0 +1,50 @@
+{
+  "name": "Approval Process",
+  "description": "Content_Requests 생성 시 승인 알림을 보내는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "description": "트리거: Content_Requests 새 레코드 감지",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "base": "{{AIRTABLE_BASE_ID}}",
+        "table": "Content_Requests",
+        "triggerField": "Created_At",
+        "formula": "{Status}='승인 대기'",
+        "maxRecords": 10
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "description": "라우터: 알림 채널 분기"
+    },
+    {
+      "id": 6,
+      "module": "airtable:ActionUpdateRecord",
+      "version": 3,
+      "description": "알림 발송 기록",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 300
+  },
+  "notes": {
+    "placeholders": {
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "SLACK_CONNECTION_ID": "추가 필요",
+      "EMAIL_CONNECTION_ID": "추가 필요"
+    }
+  }
+}

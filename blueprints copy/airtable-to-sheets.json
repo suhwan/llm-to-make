@@ -1,0 +1,51 @@
+{
+  "name": "Airtable to Google Sheets Sync",
+  "description": "Airtable 레코드를 Google Sheets로 동기화하는 시나리오",
+  "version": "1.0.0",
+  "flow": [
+    {
+      "id": 1,
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "description": "트리거: Airtable 새 레코드 감지",
+      "parameters": {
+        "__IMTCONN__": "{{AIRTABLE_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "base": "{{AIRTABLE_BASE_ID}}",
+        "table": "{{SOURCE_TABLE}}",
+        "triggerField": "Created_At",
+        "maxRecords": 100
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "description": "Google Sheets에 행 추가",
+      "parameters": {
+        "__IMTCONN__": "{{GOOGLE_SHEETS_CONNECTION_ID}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{SPREADSHEET_ID}}",
+        "sheetId": "{{SHEET_ID}}",
+        "insertDataOption": "INSERT_ROWS",
+        "valueInputOption": "USER_ENTERED"
+      }
+    }
+  ],
+  "scheduling": {
+    "type": "indefinitely",
+    "interval": 900
+  },
+  "notes": {
+    "placeholders": {
+      "AIRTABLE_CONNECTION_ID": "12046948 (기존 연결)",
+      "AIRTABLE_BASE_ID": "appzQEgOxUpCYGmk7",
+      "SOURCE_TABLE": "동기화할 테이블 ID",
+      "GOOGLE_SHEETS_CONNECTION_ID": "추가 필요",
+      "SPREADSHEET_ID": "Google Sheets ID",
+      "SHEET_ID": "시트 ID (기본: 0)"
+    }
+  }
+}

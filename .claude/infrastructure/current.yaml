@@ -1,0 +1,270 @@
+# =============================================================================
+# 현재 인프라 구성 (Current Infrastructure)
+# =============================================================================
+# 마지막 업데이트: 2026-01-12
+# 확인된 것: [confirmed], 언급만 된 것: [mentioned - 상세 필요]
+# =============================================================================
+
+organization:
+  name: "에드스파크"
+  make_org_id: 5367706
+  make_team_id: 2759651
+
+# =============================================================================
+# 자동화 플랫폼 (Automation Platforms)
+# =============================================================================
+automation:
+  make:
+    status: confirmed
+    zone: eu2.make.com
+    connections:
+      - id: 12046948
+        name: "Airtable OAuth"
+        type: oauth
+        used_in: 16 scenarios
+
+      - id: 12046957
+        name: "Google Drive (Restricted)"
+        type: oauth
+        email: adspark@pfunds.kr
+        used_in: 10 scenarios
+
+      - id: 12257316
+        name: "Google (Full)"
+        type: oauth
+        email: adspark@pfunds.kr
+        used_in: 3 scenarios
+
+      - id: 13479550
+        name: "Runware.AI"
+        type: api_key
+        used_in: 1 scenario
+
+      - id: 12281317
+        name: "OpenAI"
+        type: api_key
+        used_in: 8 scenarios
+
+      - id: 12256057
+        name: "CloudConvert"
+        type: oauth
+        used_in: 2 scenarios
+
+      - id: 12257314
+        name: "PDF.co"
+        type: api_key
+        used_in: 3 scenarios
+
+      - id: 12046943
+        name: "Typeform"
+        type: oauth
+        used_in: 0 scenarios (미사용)
+
+    scenarios:
+      ai_influencer:
+        - id: 8436833
+          name: "suhwan-image-to-video-v4"
+          purpose: "이미지 → 영상 변환"
+          status: inactive
+
+        - id: 8459905
+          name: "Error Recovery - Image to Video"
+          purpose: "실패 레코드 자동 복구"
+          status: active
+          schedule: "5분마다"
+
+        - id: 8388903
+          name: "AI Influencer - Imagen"
+          purpose: "AI 이미지 생성"
+
+        - id: 8474593
+          name: "Image to Video - Complete"
+
+      adspark_business:
+        - id: 8011872
+          name: "정부지원사업 수집"
+
+        - id: 8011801
+          name: "정부지원사업 필터링"
+
+        - id: 8012015
+          name: "1차폼 수신"
+
+        - id: 8011906
+          name: "2차폼 수신"
+
+        - id: 8012056
+          name: "고객에게 1차 타입폼 전송"
+
+        - id: 8012169
+          name: "계약서 자동 전송"
+
+        - id: 8012102
+          name: "사업계획서 자동화"
+
+        - id: 8012212
+          name: "내부 컨설팅 내재화"
+
+  n8n:
+    status: mentioned  # 상세 정보 필요
+    purpose: "이벤트 기반 자동화"
+    url: null
+    # TODO: URL, 워크플로우 목록 추가 필요
+
+# =============================================================================
+# 데이터베이스 (Databases)
+# =============================================================================
+databases:
+  airtable:
+    status: confirmed
+    base_id: appzQEgOxUpCYGmk7
+    base_name: "suwhan"
+    tables:
+      - id: tblOfVAOxlY29TBjH
+        name: "Models"
+        purpose: "AI 모델 정보"
+        key_fields: [Model_ID, Name, Status]
+
+      - id: tblImBDg1HTY6sSsP
+        name: "Content_Requests"
+        purpose: "콘텐츠 생성 요청"
+        key_fields: [Request_ID, Status]
+
+      - id: tblYEykfAmWSrtcP8
+        name: "Generated_Contents"
+        purpose: "생성된 이미지 콘텐츠"
+        key_fields: [Request_ID, Status, Video_Status, Error_Log]
+
+      - id: tblRdSXt5Lb9uLLr3
+        name: "Generated_Video_Contents"
+        purpose: "생성된 영상 콘텐츠"
+        key_fields: [Video_ID, Status, Provider, Error_Log]
+
+      - id: tblm239DKDRIgDBaE
+        name: "Prompt_Templates"
+        purpose: "프롬프트 템플릿"
+
+      - id: tblCvJUVkxEmluqxE
+        name: "Gen Models"
+        purpose: "생성 모델 설정"
+
+      - id: tbl3TuPJOCR89UbPH
+        name: "Model_Personas"
+        purpose: "모델 페르소나"
+
+      - id: tblBelaEYfG27nyZQ
+        name: "SNS_Posts"
+        purpose: "SNS 포스트 관리"
+
+      - id: tbl2G4ARRZAdqyKoY
+        name: "Advanced_Requests"
+        purpose: "고급 요청 설정"
+
+  other_db:
+    status: mentioned  # 상세 정보 필요
+    # TODO: PostgreSQL? MySQL? MongoDB? 추가 필요
+
+# =============================================================================
+# 스토리지 (Storage)
+# =============================================================================
+storage:
+  google_drive:
+    status: confirmed
+    folders:
+      - id: 14wcU3iJeN1egdTYiwB2r5gKcZmFaBgcC
+        purpose: "영상 저장"
+        write: true
+
+  s3:
+    status: mentioned  # 상세 정보 필요
+    buckets: []
+    # TODO: 버킷 목록, 권한 추가 필요
+
+# =============================================================================
+# 컴퓨팅 (Compute)
+# =============================================================================
+compute:
+  kubernetes:
+    status: mentioned  # 상세 정보 필요
+    clusters: []
+    # TODO: 클러스터 정보, 네임스페이스, 권한 추가 필요
+
+  external_apis:
+    - name: "Kling (fal.ai)"
+      status: confirmed
+      type: video_generation
+      endpoint: "https://queue.fal.run/fal-ai/kling-video/v1/standard/image-to-video"
+      auth: api_key
+
+    - name: "Runware"
+      status: confirmed
+      type: video_generation
+      connection_id: 13479550
+
+    - name: "OpenAI"
+      status: confirmed
+      type: llm
+      connection_id: 12281317
+
+    - name: "Gemini"
+      status: confirmed
+      type: image_analysis
+      auth: api_key
+
+# =============================================================================
+# 오케스트레이션 (Orchestration)
+# =============================================================================
+orchestration:
+  airflow:
+    status: mentioned  # 상세 정보 필요
+    purpose: "배치 데이터 파이프라인"
+    url: null
+    dags: []
+    # TODO: URL, DAG 목록 추가 필요
+
+# =============================================================================
+# 개발 도구 (Development Tools)
+# =============================================================================
+dev_tools:
+  github:
+    status: confirmed
+    auth: personal_access_token
+
+  ngrok:
+    status: confirmed
+    purpose: "웹훅 테스트"
+
+# =============================================================================
+# MCP 서버 (Claude Code 연동)
+# =============================================================================
+mcp_servers:
+  configured:
+    - name: make
+      status: configured
+      description: "Make.com 시나리오 관리"
+
+    - name: airtable
+      status: working
+      description: "Airtable 데이터 조회/수정"
+
+    - name: github
+      status: configured
+      description: "GitHub 저장소 관리"
+
+    - name: gdrive
+      status: configured
+      description: "Google Drive 파일 관리"
+
+    - name: playwright-test
+      status: configured
+      description: "브라우저 테스트"
+
+# =============================================================================
+# 추가 필요 정보 (TODO)
+# =============================================================================
+todo:
+  - "n8n: URL, 워크플로우 목록"
+  - "Kubernetes: 클러스터 정보, 네임스페이스"
+  - "Airflow: URL, DAG 목록"
+  - "S3: 버킷 목록, 권한"
+  - "Other DB: 종류, 연결 정보, 스키마"

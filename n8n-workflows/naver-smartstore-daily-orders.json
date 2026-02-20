@@ -1,0 +1,312 @@
+{
+  "name": "네이버 스마트스토어 일일 결제정보 조회",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-daily-9am",
+      "name": "매일 09시 실행",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.commerce.naver.com/external/v1/oauth2/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $env.NAVER_CLIENT_ID }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $env.NAVER_CLIENT_SECRET }}"
+            },
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "type",
+              "value": "SELF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-access-token",
+      "name": "액세스 토큰 발급",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.commerce.naver.com/external/v1/pay-order/seller/orders/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"searchRangeType\": \"PAYED_DATETIME\",\n  \"fromDate\": \"{{ $now.minus({days: 1}).toFormat('yyyy-MM-dd') }}\",\n  \"toDate\": \"{{ $now.toFormat('yyyy-MM-dd') }}\"\n}",
+        "options": {}
+      },
+      "id": "get-orders",
+      "name": "결제정보 조회",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-check-data",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-data",
+      "name": "데이터 확인",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split-orders",
+      "name": "주문 분리",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [880, -100]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "orderId",
+              "value": "={{ $json.orderId }}"
+            },
+            {
+              "name": "productOrderId",
+              "value": "={{ $json.productOrderId }}"
+            },
+            {
+              "name": "productName",
+              "value": "={{ $json.productName }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.quantity }}"
+            },
+            {
+              "name": "totalPaymentAmount",
+              "value": "={{ $json.totalPaymentAmount }}"
+            },
+            {
+              "name": "paymentDate",
+              "value": "={{ $json.payedDateTime }}"
+            },
+            {
+              "name": "buyerName",
+              "value": "={{ $json.ordererName }}"
+            },
+            {
+              "name": "orderStatus",
+              "value": "={{ $json.productOrderStatus }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-data",
+      "name": "데이터 정리",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1100, -100]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "save-to-sheets",
+      "name": "구글시트 저장 (선택)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1320, -100],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "=### 조회 완료\n\n결제 건수: {{ $('결제정보 조회').item.json.data?.length || 0 }}건\n\n조회 기간: 어제 ~ 오늘",
+        "options": {}
+      },
+      "id": "result-summary",
+      "name": "결과 요약",
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [880, 100]
+    }
+  ],
+  "connections": {
+    "매일 09시 실행": {
+      "main": [
+        [
+          {
+            "node": "액세스 토큰 발급",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "액세스 토큰 발급": {
+      "main": [
+        [
+          {
+            "node": "결제정보 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "결제정보 조회": {
+      "main": [
+        [
+          {
+            "node": "데이터 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "데이터 확인": {
+      "main": [
+        [
+          {
+            "node": "주문 분리",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "결과 요약",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주문 분리": {
+      "main": [
+        [
+          {
+            "node": "데이터 정리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "데이터 정리": {
+      "main": [
+        [
+          {
+            "node": "구글시트 저장 (선택)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Seoul"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "네이버",
+      "id": "naver"
+    },
+    {
+      "name": "스마트스토어",
+      "id": "smartstore"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}
